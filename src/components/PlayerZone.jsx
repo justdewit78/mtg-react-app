@@ -46,14 +46,17 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
         <>
           <h5>Hand:</h5>
           <div className="hand">
-            {player.hand.map((card) => (
-              <Card 
-                key={card.id} 
-                card={card} 
-                onDoubleClick={() => playLandFromHand(player.id, card.id)}
-              />
-            ))}
-          </div>
+  {player.hand.map((card) => {
+    console.log("Card in hand:", card); // <-- ADD THIS LINE
+    return (
+      <Card 
+        key={card.id} 
+        card={card} 
+        onDoubleClick={() => playLandFromHand(player.id, card.id)}
+      />
+    );
+  })}
+</div>
         </>
       )}
     </div>
