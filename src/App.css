@@ -51,6 +51,7 @@ body {
   overflow-y: auto; /* Add scroll for large hands/battlefields */
 }
 .hand { min-height: 120px; }
+
 .card {
   border: 2px solid #555;
   border-radius: 8px;
@@ -66,11 +67,25 @@ body {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s;
   user-select: none;
   flex-shrink: 0; /* Prevent cards from shrinking */
+  overflow: hidden; /* Hide the info initially */
+  position: relative; /* Needed for z-index to work */
 }
-.card:hover { box-shadow: 0 0 15px #61dafb; }
-.card.tapped { transform: translateY(10px) rotate(90deg); }
-.card-name { font-weight: bold; font-size: 0.9em; }
-.card-type { font-style: italic; font-size: 0.8em; color: #ccc; }
+
+.card:hover {
+  box-shadow: 0 0 15px #61dafb;
+}
+.card.tapped {
+  transform: translateY(10px) rotate(90deg);
+}
+.card-name {
+  font-weight: bold;
+  font-size: 0.9em;
+}
+.card-type {
+  font-style: italic;
+  font-size: 0.8em;
+  color: #ccc;
+}
 .action-panel button {
   width: 100%;
   padding: 15px;
@@ -86,53 +101,47 @@ body {
   background-color: #555;
   cursor: not-allowed;
 }
-.action-panel button:not(:disabled):hover { background-color: #0056b3; }
-
-.card {
-  position: relative;
+.action-panel button:not(:disabled):hover {
+  background-color: #0056b3;
 }
 
-/* Style the tooltip container */
-.card-tooltip {
-  visibility: hidden; /* Hidden by default */
+/* --- NEW HOVER EFFECT STYLES --- */
+.hand .card:hover {
+  transform: scale(1.7); /* Make the card significantly larger */
+  z-index: 100; /* Ensure the hovered card is on top of all others */
+  justify-content: flex-start; /* Align content to the top when enlarged */
+}
+
+/* Initially hide the extra info */
+.card-info {
   opacity: 0;
-  width: 220px;
-  background-color: #1a1a1a;
-  color: #fff;
+  transition: opacity 0.2s ease-in-out 0.1s; /* Fade in smoothly */
   text-align: left;
-  border-radius: 6px;
-  padding: 8px;
-  border: 1px solid #777;
-  font-size: 0.9em;
-
-  /* Position the tooltip above the card */
-  position: absolute;
-  z-index: 10;
-  bottom: 105%;
-  left: 50%;
-  transform: translateX(-50%);
-  
-  transition: opacity 0.2s ease-in-out;
-  pointer-events: none; /* Prevents the tooltip from interfering with mouse events */
+  width: 100%;
+  margin-top: 5px;
 }
 
-/* Show the tooltip on hover, but ONLY for cards in the hand */
-.hand .card:hover .card-tooltip {
-  visibility: visible;
+/* On hover, show the extra info */
+.hand .card:hover .card-info {
   opacity: 1;
 }
 
-/* Tooltip header for name and cost */
-.tooltip-header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  padding-bottom: 5px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid #555;
+/* When the card is hovered, shrink the original card text to make room */
+.hand .card:hover .card-type {
+  display: none;
 }
 
-/* Tooltip body for rules text */
-.tooltip-body {
+.card-cost {
+  font-size: 0.6em; /* Adjust font size for the enlarged card */
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.card-rules {
+  font-size: 0.55em; /* Adjust font size for the enlarged card */
   font-style: italic;
+  color: #ddd;
+  /* Allows text to wrap */
+  white-space: normal;
+  word-wrap: break-word;
 }
