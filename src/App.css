@@ -24,7 +24,6 @@ body {
   overflow: hidden;
 }
 
-/* New container for opponents */
 .opponents-container {
   grid-area: opponent-zone;
   display: flex;
@@ -39,7 +38,7 @@ body {
 .center-zone   { grid-area: center-zone; text-align: center; }
 .player-zone   { grid-area: player-zone; }
 .sidebar       { grid-area: sidebar; display: flex; flex-direction: column; gap: 1rem;}
-.battlefield, .hand {
+.battlefield {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -48,100 +47,25 @@ body {
   padding: 10px;
   border-radius: 5px;
   margin-top: 10px;
-  overflow-y: auto; /* Add scroll for large hands/battlefields */
+  overflow-y: auto;
 }
-.hand { min-height: 120px; }
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 140px;
+  background-color: #333;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  overflow-y: auto;
+  /* MODIFIED: Lift the entire hand container */
+  position: relative;
+  z-index: 1;
+}
 
 .card {
   border: 2px solid #555;
   border-radius: 8px;
   width: 90px;
-  height: 125px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: center;
-  padding: 5px;
-  cursor: pointer;
-  background-color: #4a4a4a;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s;
-  user-select: none;
-  flex-shrink: 0; /* Prevent cards from shrinking */
-  overflow: hidden; /* Hide the info initially */
-  position: relative; /* Needed for z-index to work */
-}
-
-.card:hover {
-  box-shadow: 0 0 15px #61dafb;
-}
-.card.tapped {
-  transform: translateY(10px) rotate(90deg);
-}
-.card-name {
-  font-weight: bold;
-  font-size: 0.9em;
-}
-.card-type {
-  font-style: italic;
-  font-size: 0.8em;
-  color: #ccc;
-}
-.action-panel button {
-  width: 100%;
-  padding: 15px;
-  font-size: 1.1em;
-  cursor: pointer;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  transition: background-color 0.2s;
-}
-.action-panel button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-}
-.action-panel button:not(:disabled):hover {
-  background-color: #0056b3;
-}
-
-/* --- NEW HOVER EFFECT STYLES --- */
-.hand .card:hover {
-  transform: scale(1.7); /* Make the card significantly larger */
-  z-index: 100; /* Ensure the hovered card is on top of all others */
-  justify-content: flex-start; /* Align content to the top when enlarged */
-}
-
-/* Initially hide the extra info */
-.card-info {
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out 0.1s; /* Fade in smoothly */
-  text-align: left;
-  width: 100%;
-  margin-top: 5px;
-}
-
-/* On hover, show the extra info */
-.hand .card:hover .card-info {
-  opacity: 1;
-}
-
-/* When the card is hovered, shrink the original card text to make room */
-.hand .card:hover .card-type {
-  display: none;
-}
-
-.card-cost {
-  font-size: 0.6em; /* Adjust font size for the enlarged card */
-  margin-bottom: 4px;
-  font-weight: bold;
-}
-
-.card-rules {
-  font-size: 0.55em; /* Adjust font size for the enlarged card */
-  font-style: italic;
-  color: #ddd;
-  /* Allows text to wrap */
-  white-space: normal;
-  word-wrap: break-word;
-}
+  height:
