@@ -1,0 +1,48 @@
+// src/components/PlayerZone.jsx
+import React from 'react';
+import { useGameStore } from '../gameStore';
+import { Card } from './Card';
+
+const PlayerArea = ({ player, isOpponent = false }) => {
+  const tapCard = useGameStore((state) => state.tapCard);
+  const activePlayerId = useGameStore(state => state.game.activePlayerId);
+  const manaPoolString = Object.entries(player.manaPool)
+    .filter(([, count]) => count > 0)
+    .map(([color, count]) => `${color}:${count}`)
+    .join(' ');
+  const areaClass = isOpponent ? 'opponent-zone game-zone' : 'player-zone game-zone';
+  const header = isOpponent ? `Opponent (${player.id})` : `You (${player.id})`;
+
+  return (
+    <div className={areaClass} style={{ borderColor: activePlayerId === player.id ? '#61dafb' : '#444' }}>
+      <h4>{header} | Life: {player.life} | Library: {player.library.length}</h4>
+      <div><strong>Mana:</strong> {manaPoolString || 'None'}</div>
+      <h5>Battlefield:</h5>
+      <div className="battlefield">
+        {player.battlefield.map((card) => (
+          <Card key={card.id} card={card} onCardClick={() => tapCard(player.id, card.id)} />
+        ))}
+      </div>
+      {!isOpponent && (
+        <>
+          <h5>Hand:</h5>
+          <div className="hand">
+            {player.hand.map((card) => (
+              <Card key={card.id} card={card} onCardClick={() => alert(`Playing ${card.name}`)} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export const PlayerZone = () => {
+  const player = useGameStore((state) => state.players['player1']);
+  return <PlayerArea player={player} />;
+};
+
+export const OpponentZone = () => {
+  const player = useGameStore((state) => state.players['player2']);
+  return <PlayerArea player={player} isOpponent />;
+};
