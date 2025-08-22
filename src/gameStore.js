@@ -1,42 +1,58 @@
 // src/gameStore.js
 import create from 'zustand';
 
-const initialCards = {
-  'island1': { id: 'island1', name: 'Island', type: 'Land', tapped: false, mana: 'U' },
-  'island2': { id: 'island2', name: 'Island', type: 'Land', tapped: false, mana: 'U' },
-  'forest1': { id: 'forest1', name: 'Forest', type: 'Land', tapped: false, mana: 'G' },
-  'grizzlyBears': { id: 'grizzlyBears', name: 'Grizzly Bears', type: 'Creature', tapped: false, cost: ['G', 'C'] },
-  'merfolkLooter': { id: 'merfolkLooter', name: 'Merfolk Looter', type: 'Creature', tapped: false, cost: ['U', 'C'] },
-  'sleightOfHand': { id: 'sleightOfHand', name: 'Sleight of Hand', type: 'Sorcery', cost: ['U'] },
+// Create a larger pool of cards to draw from
+const createCardPool = () => {
+  let pool = [];
+  for (let i = 0; i < 20; i++) {
+    pool.push({ id: `island${i}`, name: 'Island', type: 'Land', tapped: false, mana: 'U' });
+    pool.push({ id: `forest${i}`, name: 'Forest', type: 'Land', tapped: false, mana: 'G' });
+  }
+  for (let i = 0; i < 10; i++) {
+    pool.push({ id: `grizzlyBears${i}`, name: 'Grizzly Bears', type: 'Creature', tapped: false, cost: ['G', 'C'] });
+    pool.push({ id: `merfolkLooter${i}`, name: 'Merfolk Looter', type: 'Creature', tapped: false, cost: ['U', 'C'] });
+  }
+  return pool;
+};
+
+// Function to set up the initial state for a 4-player game
+const createInitialState = () => {
+  const players = {};
+  const playerIds = ['player1', 'player2', 'player3', 'player4'];
+
+  playerIds.forEach(id => {
+    // For each player, shuffle the deck and draw 7 cards
+    let cardPool = createCardPool();
+    const shuffledLibrary = cardPool.sort(() => Math.random() - 0.5);
+    const hand = shuffledLibrary.splice(0, 7); // Take the first 7 for the hand
+
+    players[id] = {
+      id: id,
+      life: 20,
+      hand: hand,
+      library: shuffledLibrary, // The rest are the library
+      battlefield: [], // Battlefield starts empty
+      graveyard: [],
+      manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
+    };
+  });
+
+  return {
+    game: {
+      turnNumber: 1,
+      activePlayerId: 'player1',
+      currentPhase: 'main1',
+    },
+    players: players,
+  };
 };
 
 export const useGameStore = create((set, get) => ({
-  game: {
-    turnNumber: 1,
-    activePlayerId: 'player1',
-    currentPhase: 'main1',
-  },
-  players: {
-    'player1': {
-      id: 'player1',
-      life: 20,
-      hand: [initialCards['sleightOfHand']],
-      battlefield: [initialCards['island1']],
-      graveyard: [],
-      library: [initialCards['grizzlyBears'], initialCards['merfolkLooter']],
-      manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
-    },
-    'player2': {
-      id: 'player2',
-      life: 20,
-      hand: [],
-      battlefield: [initialCards['island2'], initialCards['forest1']],
-      graveyard: [],
-      library: [initialCards['grizzlyBears']],
-      manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
-    },
-  },
+  ...createInitialState(),
 
+  // The rest of your actions (tapCard, drawCard, passTurn) go here...
+  // They don't need to be changed.
+  
   tapCard: (playerId, cardId) => set((state) => {
     if (state.game.activePlayerId !== playerId) return state;
     const player = state.players[playerId];
@@ -73,15 +89,21 @@ export const useGameStore = create((set, get) => ({
   }),
   
   passTurn: () => set((state) => {
+    const playerIds = Object.keys(state.players);
+    const currentPlayerIndex = playerIds.indexOf(state.game.activePlayerId);
+    const nextPlayerIndex = (currentPlayerIndex + 1) % playerIds.length;
+    const nextPlayerId = playerIds[nextPlayerIndex];
+    
     const currentPlayerId = state.game.activePlayerId;
-    const nextPlayerId = currentPlayerId === 'player1' ? 'player2' : 'player1';
     const nextPlayer = state.players[nextPlayerId];
+    
     const untappedBattlefield = nextPlayer.battlefield.map(card => ({ ...card, tapped: false }));
     const resetPlayerMana = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    
     return {
       game: {
         ...state.game,
-        turnNumber: state.game.activePlayerId === 'player2' ? state.game.turnNumber + 1 : state.game.turnNumber,
+        turnNumber: nextPlayerId === 'player1' ? state.game.turnNumber + 1 : state.game.turnNumber,
         activePlayerId: nextPlayerId,
         currentPhase: 'untap',
       },
