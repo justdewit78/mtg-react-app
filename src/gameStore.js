@@ -1,7 +1,6 @@
 // src/gameStore.js
 import create from 'zustand';
 
-// (The createCardPool and createInitialState functions remain the same as before)
 const createCardPool = () => {
   let pool = [];
   for (let i = 0; i < 20; i++) {
@@ -11,6 +10,15 @@ const createCardPool = () => {
   for (let i = 0; i < 10; i++) {
     pool.push({ id: `grizzlyBears${i}`, name: 'Grizzly Bears', type: 'Creature', tapped: false, cost: ['1', 'G'], rulesText: '' });
     pool.push({ id: `merfolkLooter${i}`, name: 'Merfolk Looter', type: 'Creature', tapped: false, cost: ['1', 'U'], rulesText: '{T}: Draw a card, then discard a card.' });
+    // NEW: Added a 1-mana creature for easier testing
+    pool.push({
+      id: `llanowarElves${i}`,
+      name: 'Llanowar Elves',
+      type: 'Creature',
+      tapped: false,
+      cost: ['G'],
+      rulesText: '{T}: Add {G}.'
+    });
   }
   return pool;
 };
@@ -151,57 +159,4 @@ export const useGameStore = create((set, get) => ({
     const resetPlayerMana = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
     return {
       game: {
-        ...state.game,
-        turnNumber: nextPlayerId === 'player1' ? state.game.turnNumber + 1 : state.game.turnNumber,
-        activePlayerId: nextPlayerId,
-        currentPhase: 'untap',
-        landPlayedThisTurn: false,
-      },
-      players: {
-        ...state.players,
-        [currentPlayerId]: { ...state.players[currentPlayerId], manaPool: resetPlayerMana },
-        [nextPlayerId]: { ...nextPlayer, battlefield: updatedBattlefield, manaPool: resetPlayerMana }
-      }
-    };
-  }),
-  handleLandClick: (playerId, cardId) => set((state) => {
-    if (state.game.activePlayerId !== playerId) return state;
-    const player = state.players[playerId];
-    const card = player.battlefield.find(c => c.id === cardId);
-    if (!card || card.type !== 'Land') return state;
-    const newManaPool = { ...player.manaPool };
-    let newBattlefield;
-    if (card.tapped) {
-      if (newManaPool[card.mana] > 0) {
-        newManaPool[card.mana]--;
-        newBattlefield = player.battlefield.map(c =>
-          c.id === cardId ? { ...c, tapped: false } : c
-        );
-      } else { return state; }
-    } else {
-      newManaPool[card.mana]++;
-      newBattlefield = player.battlefield.map(c =>
-        c.id === cardId ? { ...c, tapped: true } : c
-      );
-    }
-    return {
-      players: {
-        ...state.players,
-        [playerId]: { ...player, battlefield: newBattlefield, manaPool: newManaPool },
-      },
-    };
-  }),
-  drawCard: (playerId) => set((state) => {
-    const player = state.players[playerId];
-    if (player.library.length === 0) return state;
-    const newLibrary = [...player.library];
-    const drawnCard = newLibrary.pop();
-    const newHand = [...player.hand, drawnCard];
-    return {
-      players: {
-        ...state.players,
-        [playerId]: { ...player, library: newLibrary, hand: newHand },
-      },
-    };
-  }),
-}));
+        ...
