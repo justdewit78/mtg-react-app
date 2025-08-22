@@ -1,5 +1,8 @@
 import create from 'zustand';
 
+// src/gameStore.js
+
+
 const createCardPool = () => {
   let pool = [];
   for (let i = 0; i < 20; i++) {
@@ -7,11 +10,29 @@ const createCardPool = () => {
     pool.push({ id: `forest${i}`, name: 'Forest', type: 'Land', tapped: false, mana: 'G' });
   }
   for (let i = 0; i < 10; i++) {
-    pool.push({ id: `grizzlyBears${i}`, name: 'Grizzly Bears', type: 'Creature', tapped: false, cost: ['G', 'C'] });
-    pool.push({ id: `merfolkLooter${i}`, name: 'Merfolk Looter', type: 'Creature', tapped: false, cost: ['U', 'C'] });
+    // ADDED rulesText and a more descriptive cost
+    pool.push({
+      id: `grizzlyBears${i}`,
+      name: 'Grizzly Bears',
+      type: 'Creature',
+      tapped: false,
+      cost: ['1', 'G'],
+      rulesText: '' // Vanilla creatures have no rules text
+    });
+    // ADDED rulesText
+    pool.push({
+      id: `merfolkLooter${i}`,
+      name: 'Merfolk Looter',
+      type: 'Creature',
+      tapped: false,
+      cost: ['1', 'U'],
+      rulesText: '{T}: Draw a card, then discard a card.'
+    });
   }
   return pool;
 };
+
+
 
 const createInitialState = () => {
   const players = {};
@@ -147,4 +168,5 @@ export const useGameStore = create((set, get) => ({
       },
     };
   }),
+
 }));
