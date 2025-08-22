@@ -1,7 +1,7 @@
 // src/gameStore.js
 import create from 'zustand';
 
-// Create a larger pool of cards to draw from
+// (The createCardPool function remains the same as before)
 const createCardPool = () => {
   let pool = [];
   for (let i = 0; i < 20; i++) {
@@ -15,23 +15,21 @@ const createCardPool = () => {
   return pool;
 };
 
-// Function to set up the initial state for a 4-player game
 const createInitialState = () => {
   const players = {};
   const playerIds = ['player1', 'player2', 'player3', 'player4'];
 
   playerIds.forEach(id => {
-    // For each player, shuffle the deck and draw 7 cards
     let cardPool = createCardPool();
     const shuffledLibrary = cardPool.sort(() => Math.random() - 0.5);
-    const hand = shuffledLibrary.splice(0, 7); // Take the first 7 for the hand
+    const hand = shuffledLibrary.splice(0, 7);
 
     players[id] = {
       id: id,
       life: 20,
       hand: hand,
-      library: shuffledLibrary, // The rest are the library
-      battlefield: [], // Battlefield starts empty
+      library: shuffledLibrary,
+      battlefield: [],
       graveyard: [],
       manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
     };
@@ -42,6 +40,7 @@ const createInitialState = () => {
       turnNumber: 1,
       activePlayerId: 'player1',
       currentPhase: 'main1',
+      landPlayedThisTurn: false, // <-- NEW: Track land drops
     },
     players: players,
   };
@@ -50,15 +49,81 @@ const createInitialState = () => {
 export const useGameStore = create((set, get) => ({
   ...createInitialState(),
 
-  // The rest of your actions (tapCard, drawCard, passTurn) go here...
-  // They don't need to be changed.
-  
+  // =================================================
+  // ACTIONS
+  // =================================================
+
+  // NEW ACTION: playLandFromHand
+  playLandFromHand: (playerId, cardId) => set((state) => {
+    // Rule 1: Only the active player can play lands.
+    if (state.game.activePlayerId !== playerId) return state;
+
+    // Rule 2: A player can only play one land per turn.
+    if (state.game.landPlayedThisTurn) {
+      alert("You've already played a land this turn.");
+      return state;
+    }
+
+    const player = state.players[playerId];
+    const cardToPlay = player.hand.find(c => c.id === cardId);
+
+    // Rule 3: The card must be a Land.
+    if (!cardToPlay || cardToPlay.type !== 'Land') return state;
+
+    // Move the card from hand to battlefield
+    const newHand = player.hand.filter(c => c.id !== cardId);
+    const newBattlefield = [...player.battlefield, { ...cardToPlay, tapped: false }];
+
+    return {
+      game: {
+        ...state.game,
+        landPlayedThisTurn: true, // Mark that a land has been played
+      },
+      players: {
+        ...state.players,
+        [playerId]: {
+          ...player,
+          hand: newHand,
+          battlefield: newBattlefield,
+        },
+      },
+    };
+  }),
+
+  passTurn: () => set((state) => {
+    const playerIds = Object.keys(state.players);
+    const currentPlayerIndex = playerIds.indexOf(state.game.activePlayerId);
+    const nextPlayerIndex = (currentPlayerIndex + 1) % playerIds.length;
+    const nextPlayerId = playerIds[nextPlayerIndex];
+    
+    // (rest of the passTurn logic is the same...)
+    const currentPlayerId = state.game.activePlayerId;
+    const nextPlayer = state.players[nextPlayerId];
+    const untappedBattlefield = nextPlayer.battlefield.map(card => ({ ...card, tapped: false }));
+    const resetPlayerMana = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    
+    return {
+      game: {
+        ...state.game,
+        turnNumber: nextPlayerId === 'player1' ? state.game.turnNumber + 1 : state.game.turnNumber,
+        activePlayerId: nextPlayerId,
+        currentPhase: 'untap',
+        landPlayedThisTurn: false, // <-- MODIFIED: Reset for the new turn
+      },
+      players: {
+        ...state.players,
+        [currentPlayerId]: { ...state.players[currentPlayerId], manaPool: resetPlayerMana },
+        [nextPlayerId]: { ...nextPlayer, battlefield: untappedBattlefield, manaPool: resetPlayerMana }
+      }
+    };
+  }),
+
+  // (The tapCard and drawCard actions remain the same as before)
   tapCard: (playerId, cardId) => set((state) => {
     if (state.game.activePlayerId !== playerId) return state;
     const player = state.players[playerId];
     const cardToTap = player.battlefield.find(c => c.id === cardId);
     if (!cardToTap || cardToTap.tapped) return state;
-
     const newBattlefield = player.battlefield.map(card =>
       card.id === cardId ? { ...card, tapped: true } : card
     );
@@ -85,33 +150,6 @@ export const useGameStore = create((set, get) => ({
         ...state.players,
         [playerId]: { ...player, library: newLibrary, hand: newHand },
       },
-    };
-  }),
-  
-  passTurn: () => set((state) => {
-    const playerIds = Object.keys(state.players);
-    const currentPlayerIndex = playerIds.indexOf(state.game.activePlayerId);
-    const nextPlayerIndex = (currentPlayerIndex + 1) % playerIds.length;
-    const nextPlayerId = playerIds[nextPlayerIndex];
-    
-    const currentPlayerId = state.game.activePlayerId;
-    const nextPlayer = state.players[nextPlayerId];
-    
-    const untappedBattlefield = nextPlayer.battlefield.map(card => ({ ...card, tapped: false }));
-    const resetPlayerMana = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-    
-    return {
-      game: {
-        ...state.game,
-        turnNumber: nextPlayerId === 'player1' ? state.game.turnNumber + 1 : state.game.turnNumber,
-        activePlayerId: nextPlayerId,
-        currentPhase: 'untap',
-      },
-      players: {
-        ...state.players,
-        [currentPlayerId]: { ...state.players[currentPlayerId], manaPool: resetPlayerMana },
-        [nextPlayerId]: { ...nextPlayer, battlefield: untappedBattlefield, manaPool: resetPlayerMana }
-      }
     };
   }),
 }));
