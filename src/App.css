@@ -87,3 +87,52 @@ body {
   cursor: not-allowed;
 }
 .action-panel button:not(:disabled):hover { background-color: #0056b3; }
+
+.card {
+  position: relative;
+}
+
+/* Style the tooltip container */
+.card-tooltip {
+  visibility: hidden; /* Hidden by default */
+  opacity: 0;
+  width: 220px;
+  background-color: #1a1a1a;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px;
+  border: 1px solid #777;
+  font-size: 0.9em;
+
+  /* Position the tooltip above the card */
+  position: absolute;
+  z-index: 10;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  transition: opacity 0.2s ease-in-out;
+  pointer-events: none; /* Prevents the tooltip from interfering with mouse events */
+}
+
+/* Show the tooltip on hover, but ONLY for cards in the hand */
+.hand .card:hover .card-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Tooltip header for name and cost */
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #555;
+}
+
+/* Tooltip body for rules text */
+.tooltip-body {
+  font-style: italic;
+}
