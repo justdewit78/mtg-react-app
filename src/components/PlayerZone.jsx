@@ -4,12 +4,11 @@ import { useGameStore } from '../gameStore';
 import { Card } from './Card';
 
 const PlayerArea = ({ playerId, isOpponent = false }) => {
-  // Get all players, game state, and actions from the store
-  const { players, game, handleLandClick, playLandFromHand } = useGameStore(state => ({
+  const { players, game, handleLandClick, playCardFromHand } = useGameStore(state => ({
     players: state.players,
     game: state.game,
-    handleLandClick: state.handleLandClick, // <-- CHANGED from tapCard
-    playLandFromHand: state.playLandFromHand,
+    handleLandClick: state.handleLandClick,
+    playCardFromHand: state.playCardFromHand, // <-- CHANGED from playLandFromHand
   }));
 
   const player = players[playerId];
@@ -36,7 +35,6 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
           <Card 
             key={card.id} 
             card={card} 
-            // This now calls our new, smarter action
             onClick={() => handleLandClick(player.id, card.id)} 
           />
         ))}
@@ -46,17 +44,15 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
         <>
           <h5>Hand:</h5>
           <div className="hand">
-  {player.hand.map((card) => {
-    console.log("Card in hand:", card); // <-- ADD THIS LINE
-    return (
-      <Card 
-        key={card.id} 
-        card={card} 
-        onDoubleClick={() => playLandFromHand(player.id, card.id)}
-      />
-    );
-  })}
-</div>
+            {player.hand.map((card) => (
+              <Card 
+                key={card.id} 
+                card={card} 
+                // This now calls our new, universal play card action
+                onDoubleClick={() => playCardFromHand(player.id, card.id)}
+              />
+            ))}
+          </div>
         </>
       )}
     </div>
