@@ -5,10 +5,10 @@ import { Card } from './Card';
 
 const PlayerArea = ({ playerId, isOpponent = false }) => {
   // Get all players, game state, and actions from the store
-  const { players, game, tapCard, playLandFromHand } = useGameStore(state => ({
+  const { players, game, handleLandClick, playLandFromHand } = useGameStore(state => ({
     players: state.players,
     game: state.game,
-    tapCard: state.tapCard,
+    handleLandClick: state.handleLandClick, // <-- CHANGED from tapCard
     playLandFromHand: state.playLandFromHand,
   }));
 
@@ -36,8 +36,8 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
           <Card 
             key={card.id} 
             card={card} 
-            // Battlefield cards are single-clicked to tap
-            onClick={() => tapCard(player.id, card.id)} 
+            // This now calls our new, smarter action
+            onClick={() => handleLandClick(player.id, card.id)} 
           />
         ))}
       </div>
@@ -50,7 +50,6 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
               <Card 
                 key={card.id} 
                 card={card} 
-                // Hand cards are double-clicked to play a land
                 onDoubleClick={() => playLandFromHand(player.id, card.id)}
               />
             ))}
