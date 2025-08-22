@@ -1,6 +1,5 @@
 import create from 'zustand';
 
-// (The createCardPool and createInitialState functions remain the same as before)
 const createCardPool = () => {
   let pool = [];
   for (let i = 0; i < 20; i++) {
@@ -74,7 +73,7 @@ export const useGameStore = create((set, get) => ({
         c.id === cardId ? { ...c, tapped: true } : c
       );
     }
-
+    
     return {
       players: {
         ...state.players,
