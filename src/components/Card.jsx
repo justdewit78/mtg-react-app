@@ -1,7 +1,6 @@
 // src/components/Card.jsx
 import React from 'react';
 
-// Modified to accept both onClick and onDoubleClick props
 export const Card = ({ card, onClick, onDoubleClick }) => {
   const cardClasses = `card ${card.tapped ? 'tapped' : ''}`;
 
@@ -13,6 +12,19 @@ export const Card = ({ card, onClick, onDoubleClick }) => {
     >
       <div className="card-name">{card.name}</div>
       <div className="card-type">{card.type}</div>
+
+      {/* NEW: Tooltip for non-land cards */}
+      {card.cost && (
+        <div className="card-tooltip">
+          <div className="tooltip-header">
+            <span>{card.name}</span>
+            <span>Cost: {card.cost.join('')}</span>
+          </div>
+          <div className="tooltip-body">
+            {card.rulesText ? card.rulesText : <em>(No rules text)</em>}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
