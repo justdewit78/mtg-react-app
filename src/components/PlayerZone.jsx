@@ -3,13 +3,18 @@ import React from 'react';
 import { useGameStore } from '../gameStore';
 import { Card } from './Card';
 
-// Generic component to display any player's full area
 const PlayerArea = ({ playerId, isOpponent = false }) => {
-  const player = useGameStore(state => state.players[playerId]);
-  const tapCard = useGameStore((state) => state.tapCard);
-  const activePlayerId = useGameStore(state => state.game.activePlayerId);
+  // Get all players, game state, and actions from the store
+  const { players, game, tapCard, playLandFromHand } = useGameStore(state => ({
+    players: state.players,
+    game: state.game,
+    tapCard: state.tapCard,
+    playLandFromHand: state.playLandFromHand,
+  }));
 
-  // If player data hasn't loaded yet, show a placeholder
+  const player = players[playerId];
+  const activePlayerId = game.activePlayerId;
+
   if (!player) return <div>Loading...</div>;
 
   const manaPoolString = Object.entries(player.manaPool)
@@ -28,7 +33,12 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
       <h5>Battlefield:</h5>
       <div className="battlefield">
         {player.battlefield.map((card) => (
-          <Card key={card.id} card={card} onCardClick={() => tapCard(player.id, card.id)} />
+          <Card 
+            key={card.id} 
+            card={card} 
+            // Battlefield cards are single-clicked to tap
+            onClick={() => tapCard(player.id, card.id)} 
+          />
         ))}
       </div>
       
@@ -37,7 +47,12 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
           <h5>Hand:</h5>
           <div className="hand">
             {player.hand.map((card) => (
-              <Card key={card.id} card={card} onCardClick={() => alert(`Playing ${card.name}`)} />
+              <Card 
+                key={card.id} 
+                card={card} 
+                // Hand cards are double-clicked to play a land
+                onDoubleClick={() => playLandFromHand(player.id, card.id)}
+              />
             ))}
           </div>
         </>
@@ -46,12 +61,10 @@ const PlayerArea = ({ playerId, isOpponent = false }) => {
   );
 };
 
-// Main player's zone (shows hand)
 export const PlayerZone = ({ playerId }) => {
   return <PlayerArea playerId={playerId} />;
 };
 
-// Opponent's zone (hides hand)
 export const OpponentZone = ({ playerId }) => {
   return <PlayerArea playerId={playerId} isOpponent />;
 };
