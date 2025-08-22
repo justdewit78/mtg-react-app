@@ -73,7 +73,7 @@ export const useGameStore = create((set, get) => ({
         c.id === cardId ? { ...c, tapped: true } : c
       );
     }
-    
+
     return {
       players: {
         ...state.players,
