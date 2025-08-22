@@ -23,7 +23,19 @@ body {
   padding: 1rem;
   overflow: hidden;
 }
-.opponent-zone { grid-area: opponent-zone; }
+
+/* New container for opponents */
+.opponents-container {
+  grid-area: opponent-zone;
+  display: flex;
+  gap: 1rem;
+}
+.opponent-zone {
+  flex: 1; /* Each opponent takes equal space */
+  display: flex;
+  flex-direction: column;
+}
+
 .center-zone   { grid-area: center-zone; text-align: center; }
 .player-zone   { grid-area: player-zone; }
 .sidebar       { grid-area: sidebar; display: flex; flex-direction: column; gap: 1rem;}
@@ -36,6 +48,7 @@ body {
   padding: 10px;
   border-radius: 5px;
   margin-top: 10px;
+  overflow-y: auto; /* Add scroll for large hands/battlefields */
 }
 .hand { min-height: 120px; }
 .card {
@@ -52,6 +65,7 @@ body {
   background-color: #4a4a4a;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s;
   user-select: none;
+  flex-shrink: 0; /* Prevent cards from shrinking */
 }
 .card:hover { box-shadow: 0 0 15px #61dafb; }
 .card.tapped { transform: translateY(10px) rotate(90deg); }
