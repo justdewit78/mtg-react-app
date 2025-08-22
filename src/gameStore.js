@@ -1,6 +1,7 @@
 // src/gameStore.js
 import create from 'zustand';
 
+// (The createCardPool and createInitialState functions remain the same as before)
 const createCardPool = () => {
   let pool = [];
   for (let i = 0; i < 20; i++) {
@@ -48,73 +49,159 @@ const createInitialState = () => {
 export const useGameStore = create((set, get) => ({
   ...createInitialState(),
 
-  // REPLACED playLandFromHand with the more generic playCardFromHand
   playCardFromHand: (playerId, cardId) => set((state) => {
+    console.clear(); // Clears console for a clean log
+    console.log("--- Action: playCardFromHand ---");
     const player = state.players[playerId];
     const card = player.hand.find(c => c.id === cardId);
 
-    // Rule: Must be the active player and card must exist
-    if (!card || state.game.activePlayerId !== playerId) return state;
-
-    // --- CASE 1: Playing a Land ---
-    if (card.type === 'Land') {
-      if (state.game.landPlayedThisTurn) {
-        alert("You've already played a land this turn.");
+    if (!card || state.game.activePlayerId !== playerId) {
+        console.error("Action aborted: Not active player or card not found.");
         return state;
-      }
-      const newHand = player.hand.filter(c => c.id !== cardId);
-      const newBattlefield = [...player.battlefield, { ...card, tapped: false }];
-      return {
-        game: { ...state.game, landPlayedThisTurn: true },
-        players: { ...state.players, [playerId]: { ...player, hand: newHand, battlefield: newBattlefield } },
-      };
+    }
+    
+    console.log("Attempting to play card:", card);
+
+    if (card.type === 'Land') {
+        console.log("Logic branch: Playing a Land.");
+        if (state.game.landPlayedThisTurn) {
+            console.warn("FAIL: Land already played this turn.");
+            alert("You've already played a land this turn.");
+            return state;
+        }
+        console.log("SUCCESS: Playing land.");
+        const newHand = player.hand.filter(c => c.id !== cardId);
+        const newBattlefield = [...player.battlefield, { ...card, tapped: false }];
+        return {
+            game: { ...state.game, landPlayedThisTurn: true },
+            players: { ...state.players, [playerId]: { ...player, hand: newHand, battlefield: newBattlefield } },
+        };
     }
 
-    // --- CASE 2: Playing a Spell (Creature, etc.) ---
+    console.log("Logic branch: Playing a Spell.");
     const { manaPool } = player;
+    console.log("Player's current Mana Pool:", manaPool);
+
     const cost = { W: 0, U: 0, B: 0, R: 0, G: 0, generic: 0 };
     card.cost.forEach(c => {
-      if (['W', 'U', 'B', 'R', 'G'].includes(c)) cost[c]++;
-      else cost.generic += parseInt(c, 10) || 0;
+        if (['W', 'U', 'B', 'R', 'G'].includes(c)) cost[c]++;
+        else cost.generic += parseInt(c, 10) || 0;
     });
+    console.log("Calculated Cost of Spell:", cost);
 
-    // Check if player can pay the colored portion of the cost
     let canPayColors = (manaPool.W >= cost.W) && (manaPool.U >= cost.U) && (manaPool.B >= cost.B) && (manaPool.R >= cost.R) && (manaPool.G >= cost.G);
+    console.log("Can pay colored mana? ->", canPayColors);
     if (!canPayColors) {
-      alert("Insufficient mana.");
-      return state;
+        console.warn("FAIL: Cannot pay colored cost.");
+        alert("Insufficient mana.");
+        return state;
     }
 
-    // Check if player can pay the generic portion with remaining mana
-    const remainingMana = (manaPool.W - cost.W) + (manaPool.U - cost.U) + (manaPool.B - cost.B) + (manaPool.R - cost.R) + (manaPool.G - cost.G);
-    if (remainingMana < cost.generic) {
-      alert("Insufficient mana.");
-      return state;
+    const remainingManaForGeneric = (manaPool.W - cost.W) + (manaPool.U - cost.U) + (manaPool.B - cost.B) + (manaPool.R - cost.R) + (manaPool.G - cost.G);
+    console.log(`Mana left for generic cost: ${remainingManaForGeneric}. Generic cost needed: ${cost.generic}`);
+    if (remainingManaForGeneric < cost.generic) {
+        console.warn("FAIL: Cannot pay generic cost.");
+        alert("Insufficient mana.");
+        return state;
     }
 
-    // --- PAYMENT LOGIC ---
+    console.log("SUCCESS: Mana cost can be paid. Processing payment...");
+    
     const newManaPool = { ...manaPool };
-    // 1. Pay colored costs
     newManaPool.W -= cost.W;
     newManaPool.U -= cost.U;
     newManaPool.B -= cost.B;
     newManaPool.R -= cost.R;
     newManaPool.G -= cost.G;
 
-    // 2. Pay generic costs from remaining pool (simple version)
     let genericCostLeft = cost.generic;
-    for (const color of ['W', 'U', 'B', 'R', 'G']) {
+    for (const color of ['W', 'U', 'B', 'R', 'G', 'C']) {
       const spend = Math.min(genericCostLeft, newManaPool[color]);
       newManaPool[color] -= spend;
       genericCostLeft -= spend;
     }
-
-    // --- UPDATE STATE ---
+    
     const newHand = player.hand.filter(c => c.id !== cardId);
-    // Creatures enter with summoning sickness
     const newCard = { ...card, tapped: false, summoningSickness: true };
     const newBattlefield = [...player.battlefield, newCard];
+    
+    console.log("Card successfully played. New state being set.");
 
     return {
       players: {
-        ...state.
+        ...state.players,
+        [playerId]: { ...player, hand: newHand, battlefield: newBattlefield, manaPool: newManaPool },
+      },
+    };
+  }),
+
+  // (The rest of the file remains the same)
+  passTurn: () => set((state) => {
+    const playerIds = Object.keys(state.players);
+    const currentPlayerIndex = playerIds.indexOf(state.game.activePlayerId);
+    const nextPlayerIndex = (currentPlayerIndex + 1) % playerIds.length;
+    const nextPlayerId = playerIds[nextPlayerIndex];
+    const currentPlayerId = state.game.activePlayerId;
+    const nextPlayer = state.players[nextPlayerId];
+    const updatedBattlefield = nextPlayer.battlefield.map(card => ({
+      ...card,
+      tapped: false,
+      summoningSickness: false,
+    }));
+    const resetPlayerMana = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    return {
+      game: {
+        ...state.game,
+        turnNumber: nextPlayerId === 'player1' ? state.game.turnNumber + 1 : state.game.turnNumber,
+        activePlayerId: nextPlayerId,
+        currentPhase: 'untap',
+        landPlayedThisTurn: false,
+      },
+      players: {
+        ...state.players,
+        [currentPlayerId]: { ...state.players[currentPlayerId], manaPool: resetPlayerMana },
+        [nextPlayerId]: { ...nextPlayer, battlefield: updatedBattlefield, manaPool: resetPlayerMana }
+      }
+    };
+  }),
+  handleLandClick: (playerId, cardId) => set((state) => {
+    if (state.game.activePlayerId !== playerId) return state;
+    const player = state.players[playerId];
+    const card = player.battlefield.find(c => c.id === cardId);
+    if (!card || card.type !== 'Land') return state;
+    const newManaPool = { ...player.manaPool };
+    let newBattlefield;
+    if (card.tapped) {
+      if (newManaPool[card.mana] > 0) {
+        newManaPool[card.mana]--;
+        newBattlefield = player.battlefield.map(c =>
+          c.id === cardId ? { ...c, tapped: false } : c
+        );
+      } else { return state; }
+    } else {
+      newManaPool[card.mana]++;
+      newBattlefield = player.battlefield.map(c =>
+        c.id === cardId ? { ...c, tapped: true } : c
+      );
+    }
+    return {
+      players: {
+        ...state.players,
+        [playerId]: { ...player, battlefield: newBattlefield, manaPool: newManaPool },
+      },
+    };
+  }),
+  drawCard: (playerId) => set((state) => {
+    const player = state.players[playerId];
+    if (player.library.length === 0) return state;
+    const newLibrary = [...player.library];
+    const drawnCard = newLibrary.pop();
+    const newHand = [...player.hand, drawnCard];
+    return {
+      players: {
+        ...state.players,
+        [playerId]: { ...player, library: newLibrary, hand: newHand },
+      },
+    };
+  }),
+}));
